@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Paste to Markdown Formatter</title>
+    
+    <!-- Turndown.js for converting HTML to Markdown -->
+    <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+    
+    <!-- Highlight.js for IDE coloring -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px auto;
+            max-width: 1000px;
+            background-color: #f6f8fa;
+        }
+        h1.app-title {
+            margin-bottom: 20px;
+            color: #24292f;
+        }
+        .controls {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+            margin-bottom: 20px;
+        }
+        .editable-input {
+            width: 100%;
+            height: 250px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+        .editable-input:empty:before {
+            content: attr(data-placeholder);
+            color: #8c959f;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 15px;
+            border: 1px solid rgba(27,31,36,0.15);
+            border-radius: 6px;
+            background-color: #2da44e;
+            color: white;
+        }
+        button.secondary {
+            background-color: #f6f8fa;
+            color: #24292f;
+        }
+        button:active {
+            opacity: 0.8;
+        }
+        .preview-container {
+            display: none;
+            margin-top: 30px;
+        }
+        .preview pre {
+            background-color: #24292e;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .preview pre code {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            background-color: transparent;
+            padding: 0;
+            font-size: 14px;
+            color: #e1e4e8; 
+        }
+    </style>
+</head>
+<body>
+
+    <h1 class="app-title">Paste to Markdown</h1>
+    
+    <div class="controls">
+        <label><strong>1. Paste your styled text (from Word, Websites, etc.) here</strong></label>
+        <br>
+        <div id="textInput" class="editable-input" contenteditable="true" data-placeholder="Paste rich text here..."></div>
+        <br>
+        <button onclick="processText()">Convert to Markdown</button>
+    </div>
+
+    <div id="previewContainer" class="preview-container">
+        <div class="action-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label><strong>Markdown Code Output</strong></label>
+            <div>
+                <button class="secondary" onclick="copyCode()" id="copyBtn">Copy Markdown</button>
+            </div>
+        </div>
+        <div class="preview">
+            <pre><code id="previewOutput" class="language-markdown"></code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Setup Turndown
+        const turndownService = new TurndownService({
+            headingStyle: 'atx',
+            codeBlockStyle: 'fenced'
+        });
+
+        function processText() {
+            const inputElement = document.getElementById("textInput");
+            const rawHtml = inputElement.innerHTML;
+            
+            if (!rawHtml.trim() || rawHtml === '<br>') return;
+
+            // Convert HTML to Markdown
+            const markdownText = turndownService.turndown(rawHtml);
+
+            const outputElement = document.getElementById("previewOutput");
+            outputElement.textContent = markdownText;
+            
+            // Apply syntax highlighting
+            delete outputElement.dataset.highlighted;
+            hljs.highlightElement(outputElement);
+
+            document.getElementById("previewContainer").style.display = "block";
+        }
+
+        function copyCode() {
+            const codeText = document.getElementById('previewOutput').textContent;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.innerText;
+                btn.innerText = "Copied!";
+                btn.style.backgroundColor = "#2da44e";
+                btn.style.color = "white";
+                
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.backgroundColor = "";
+                    btn.style.color = "";
+                }, 2000);
+            }).catch(err => {
+                alert('Copy failed. Your browser might be blocking clipboard access.');
+            });
+        }
+    </script>
+</body>
+</html>
